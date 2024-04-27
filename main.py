@@ -54,6 +54,9 @@ def create():
 
 		cur = conn.cursor() 
 		data=request.get_json();
+		# return user;
+
+		# Get the data from the form 
 		name = data['name'];
 		email = data['email'] 
 
@@ -70,6 +73,35 @@ def create():
 	finally:
 		cur.close() 
 		conn.close() 
+
+	
+
+@app.route('/users/<int:user_id>', methods=['PUT']) 
+def update(user_id): 
+
+    try:
+        conn=DatabaseConnection()
+        cur=conn.cursor()
+        data=request.get_json();
+        cur.execute('''SELECT * FROM users WHERE id=%s''',(user_id,)) 
+        id= cur.fetchone()[0]
+        name=data['name']
+        email=data['email']
+        
+        if id == user_id:
+            cur.execute( 
+					'''UPDATE users SET name=%s,
+					email=%s WHERE id=%s''', (name, email, user_id)) 
+
+            conn.commit() 
+            return{"status":200,"message":"Data updated succesfully","data":data}
+        else:
+          return{"status":404,"message":"User not found"}
+    except Exception as e:
+       return{"status":500,"message":"Failed to update data"}
+    finally:
+      cur.close()
+      conn.close()
 
 
 if __name__ == '__main__': 
