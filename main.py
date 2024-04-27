@@ -15,8 +15,7 @@ conn=DatabaseConnection();
 # create a cursor 
 cur = conn.cursor() 
 
-# if you already have any table or not id doesnt matter this 
-# will create a users table for you. 
+
 cur.execute( 
 	'''CREATE TABLE IF NOT EXISTS users (id serial 
 	PRIMARY KEY, name varchar(100), email varchar(100));''')  
@@ -54,14 +53,10 @@ def create():
 
 		cur = conn.cursor() 
 		data=request.get_json();
-		# return user;
-
-		# Get the data from the form 
 		name = data['name'];
 		email = data['email'] 
 
 		# Insert the data into the table 
-	
 		cur.execute( 
 			'''INSERT INTO users 
 			(name, email) VALUES (%s, %s)''', 
@@ -76,7 +71,7 @@ def create():
 
 	
 
-@app.route('/users/<int:user_id>', methods=['PUT']) 
+@app.route('/update/<int:user_id>', methods=['PUT']) 
 def update(user_id): 
 
     try:
@@ -87,7 +82,7 @@ def update(user_id):
         id= cur.fetchone()[0]
         name=data['name']
         email=data['email']
-        
+
         if id == user_id:
             cur.execute( 
 					'''UPDATE users SET name=%s,
@@ -102,6 +97,29 @@ def update(user_id):
     finally:
       cur.close()
       conn.close()
+
+
+@app.route('/delete/<int:user_id>', methods=['DELETE']) 
+def delete(user_id): 
+	try:
+		conn=DatabaseConnection();
+		cur = conn.cursor() 
+		
+		cur.execute('''SELECT * FROM users WHERE id=%s''',(user_id,)) 
+		id= cur.fetchone()[0]
+	
+		if user_id == id:
+
+		    # Delete the data from the table 
+			cur.execute('''DELETE FROM users WHERE id=%s''', (id,))
+			conn.commit()
+			return {"status":200,"message":"Record deleted sucessfully"}
+		else:
+			return {"status":404 , "message":"User Not found"}
+	except Exception as e:
+            return {"status":500 , "message":"Failed to delete record"}
+          
+
 
 
 if __name__ == '__main__': 
